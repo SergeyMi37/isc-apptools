@@ -1,4 +1,4 @@
-Include (App.LogMacro, Ensemble)
+Include App.LogMacro
 
 /// Utilities for group work with Ensemble or Interoperability products of different Namespaces
 Class App.Production [ Abstract ]
@@ -161,7 +161,7 @@ ClassMethod EnsAction(ex = "", nsOnly = "", out) As %Status [ PublicList = (tPro
 			$$$NspGoto(curNs,ns)
 			if ex'="info" w !,"Name production :"_tProductionName
 			Set sc = ##class(Ens.Director).GetProductionStatus(tProductionName,.Stat)
-			s stat=$s(Stat=$$$eProductionStateRunning:"Running",Stat=$$$eProductionStateStopped:"Stopped",Stat=$$$eProductionStateSuspended:"Suspended",Stat=$$$eProductionStateTroubled:"Troubled",1:"?")
+			s stat=$s(Stat=1:"Running",Stat=2:"Stopped",Stat=3:"Suspended",Stat=4:"Troubled",1:"?")
 			if ex'="info" w " Status :"_stat
 			i 'sc w $System.Status.DisplayError(sc)
 			s out(ns,tProductionName)=stat
