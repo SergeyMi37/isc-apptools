@@ -39,5 +39,3 @@ USER>zn "IRISAPP"
 IRISAPP>do ##class(App.security).LockDown("NewPassword123",.msg,1,1,0,0) 
 
 ```
-
-[Read about all the files in this artilce](https://community.intersystems.com/post/dockerfile-and-friends-or-how-run-and-collaborate-objectscript-projects-intersystems-iris)
