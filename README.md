@@ -36,6 +36,13 @@ Open IRIS terminal:
 $ docker-compose exec iris iris session iris
 USER>zn "IRISAPP"
 
-IRISAPP>do ##class(App.security).LockDown("NewPassword123",.msg,1,1,0,0) 
+IRISAPP>d ##class(App.sys).SaveQuery("%SYSTEM.License:Counts","^test",123)
+
+IRISAPP>zw ^test
+^test("%SYSTEM.License:Counts",123,0,1)="InstanceLicenseUse"
+^test("%SYSTEM.License:Counts",123,0,2)="License Units"
+^test("%SYSTEM.License:Counts",123,1,1)="Total   Authorized LU"
+^test("%SYSTEM.License:Counts",123,1,2)=5
+...
 
 ```
