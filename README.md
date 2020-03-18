@@ -35,7 +35,7 @@ Open IRIS terminal:
 ```
 $ docker-compose exec iris iris session iris
 USER>zn "IRISAPP"
-IRISAPPdo ##class(App.Production).EnsConfSave(1)
+USER>do ##class(App.security).LockDown("NewPassword123",.msg,1,1,0,0) 
 
 ```
 
