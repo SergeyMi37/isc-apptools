@@ -10,8 +10,8 @@ Parameter TIMEOUTSTOP = 120;
 Parameter SettingsGN = "^%App.Productions";
 
 ///  Check and save settings and status of products in all Namespaces
-///  d ##class(App.Production).EnsConfSave(1)
-ClassMethod EnsConfSave(resave = 0) As %Status
+///  d ##class(App.Production).SaveStat(1)
+ClassMethod SaveStat(resave = 0) As %Status
 {
 	s listns=##class(App.sys).ListNS(.inf,"NotPref,Ens")
 	s GN=..#SettingsGN
@@ -26,9 +26,17 @@ ClassMethod EnsConfSave(resave = 0) As %Status
  quit $$$OK
 }
 
+///  Save settings and status of products in all Namespaces; Stop all productions
+///  d ##class(App.Production).SaveAndStop()
+ClassMethod SaveAndStop() As %Status
+{
+	d ..SaveStat(1)
+	d ..StopAll()
+}
+
 /// Remove autostart from all products; stop all products in Namespaces before restarting the OS
-/// d ##class(App.Production).EnsDown()
-ClassMethod EnsDown() As %Status
+/// d ##class(App.Production).StopAll()
+ClassMethod StopAll() As %Status
 {
  d ..EnsAction("auto0")
  d ..EnsAction("stop")
@@ -37,8 +45,8 @@ ClassMethod EnsDown() As %Status
 }
 
 /// Check and restore autorun products in Namespaces, run all products that were launched
-/// d ##class(App.Production).EnsConfRest()
-ClassMethod EnsConfRest() As %Status
+/// d ##class(App.Production).StartAll()
+ClassMethod StartAll() As %Status
 {
  	d ..EnsAction("auto1")
  	d ..EnsAction("start")
@@ -46,9 +54,9 @@ ClassMethod EnsConfRest() As %Status
  	q
 }
 
-/// Creating message cleaning tasks
-/// d ##class(App.Production).CreateTaskPurgeEns()
-ClassMethod CreateTaskPurgeEns(days = 7) As %Status
+/// Creating tasks message cleaning
+/// d ##class(App.Production).CreateTasksPurgeMess(30)
+ClassMethod CreateTasksPurgeMess(days = 90) As %Status
 {
 	s listns=##class(App.sys).ListNS(.inf,"NotPref,Ens")	
 	set ns=""
@@ -84,8 +92,8 @@ ClassMethod CreateTaskPurge(Name As %String = "", ns = {$zu(5)}, days = 90)
 }
 
 /// Initiate all Namespaces for the Ensemble\Interoperability
-/// d ##class(App.Production).InitEnsNS("APP,AAA")
-ClassMethod InitEnsNS(nsList = "") As %Status
+/// d ##class(App.Production).Init("APP,AAA")
+ClassMethod Init(nsList = "") As %Status
 {
  if nsList="" set nsList=##class(App.sys).ListNS(.inf,"NotPref")
 	for i=1:1:$l(nsList) {

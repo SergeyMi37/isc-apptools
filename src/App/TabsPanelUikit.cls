@@ -10,19 +10,26 @@ Parameter JSLIB = "Uikit-3, jQueryUi-2";
 /// The application title
 Parameter HeaderText = "Tabs Application title";
 
+/// Icons for the application
+ClassMethod GetAppIcon(icon) As %String
+{
+ 	q "<link rel=""icon"" type=""image/x-icon"" href="""_##class(App.rest).getStatic("App.TabsPanelUikit:"_icon)_"""/>"
+}
+
 /// Main method generate the content of page
 ClassMethod OnPage() As %Status
 {
  set namespace=$zu(5)
  // Save the session parameters debugging mode (implies extended disclosure)
  set %session.Data("debug")=%request.Get("debug")
- set autoloadmenu=%request.Get("autoload")
+ set autoload=%request.Get("autoload")
  &html<
 <html>
  <head>
  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
  <title>#(..#HeaderText)#</title>
 >
+   	write ..GetAppIcon("IconTools")
 	write ##class(App.LogInfoPane).GetLink()
 	write ##class(App.LogInfoPane).AddJsScripts() 
    	   do ##class(App.LogInfoPane).AddJS(namespace,..%ClassName(1))
@@ -76,14 +83,14 @@ ClassMethod OnPage() As %Status
  	//Download status
  	write "$(document).ready(function(){"
  	write "$('#status_nav').load('App.Action.cls','appClass="_..%ClassName(1)_"&appMethod=DrawStatus&appNsp="_namespace_"&appPar=');"
- 	if autoloadmenu="" {
+ 	if autoload="" {
 	 	d ..GetAllApps(.opt) 
 	 	set i="" 
 	 	for { set i=$o(opt(i)) q:i=""
 	 		if $GET(opt(i,"Active")) write "$('#Menu"_opt(i,"id")_"').trigger('click');"
 	 	}
  	} else {
-	 	write "$('#Menu"_autoloadmenu_"').trigger('click');"
+	 	write "$('#Menu"_autoload_"').trigger('click');"
  	}
  	write "});"
  $$$jsstop
@@ -206,7 +213,7 @@ ClassMethod ButtonAgain(divId = "", key = "") As %Status
 	set mhead=divId_"MainHeader"
 	set mcont=divId_"MainContent"
 	set onclick="$('#"_mcont_"').empty();AppAct('"_divId_"MainForm','"_mhead_"','AppAct="_$zu(5)_":"_..%ClassName(1)_":"_divId_"FirstHead:&divId="_divId_"&key="_key_"');"
-	quit $$$appButton("appButtonExit","onclick="""_$g(onclick)_"""",$$$aText("First",""))
+	quit $$$appButton("appButtonExit","onclick="""_$g(onclick)_"""",$$$aText("Again",""))
 }
 
 /// the render Tab On the program"
@@ -281,7 +288,7 @@ ClassMethod FindFirstHead(Par = "") As %Status
 			
 			</td>
 			<td>
-			#($$$appButton(divId_"appButtonResult1","onclick="""_$tr(onclick,"*",1)_"""","Find film in namespase SAMPLES"))#
+			#($$$appButton(divId_"appButtonResult1","onclick="""_$tr(onclick,"*",1)_"""","Find in table"))#
 			</td>
 			<td>
 
@@ -314,10 +321,16 @@ ClassMethod FindResult(Par = "") As %Status
 	write ..ButtonAgain(divId,key)
 	if mode=1 {
 		if Name="" w $$$appError($$$aText("Context is empty","")) quit $$$OK
-		zn "samples"
-		set sql="select * from Cinema.Film where title is not null "
-		if Name'="" s sql=sql_" and (title like '%"_Name_"%') "
-		if Desc'="" s sql=sql_" and (Description like '%"_Desc_"%') "
+		if $zv["IRIS" {
+			zn "USER"
+			set sql="select * from Demo.Address where City is not null "
+			if Name'="" s sql=sql_" and (City like '%"_Name_"%') "
+
+		} else {
+			zn "samples"
+			set sql="select * from Cinema.Film where title is not null "
+			if Name'="" s sql=sql_" and (title like '%"_Name_"%') "
+		}
 		set msg="Query: "_sql
 		set exec="##class(App.LogInfo).MarkRed(%AppLogInfoVal,"""_Name_","_Desc_""")"
 		set st=##class(App.LogInfoPane).DrawSQL(sql,100000,$zu(5),msg,exec)
@@ -330,6 +343,69 @@ ClassMethod FindResult(Par = "") As %Status
 	}
 	write "<br>"
 	quit $$$OK
+}
+
+/// s h=##class(App.rest).getStatic("App.TabsPanelUikit:IconTools") w !,h
+XData IconTools [ MimeType = application/yaml ]
+{
+data:image/x-icon;base64,AAABAAEAICAAAAEAGACoDAAAFgAAACgAAAAgAAAAQAAAAAEAGAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///+AgICAgICA
+gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA
+gICAgICAgICAgICAgICAgICAgICAgIAAAAAAAAD///////8AAAAAAAD////AwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCA
+gICAgIAAAAAAAAD///////+AgIAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD///////+A
+gICAgIAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD////////AwMCAgICAgIAAAAAAAAD////A
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMCAgICAgIAAAAAAAAD////////AwMDAwMCAgICAgIAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD/////
+///////AwMDAwMCAgICAgIAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD///////8AAAD////AwMDAwMCAgICA
+gIAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMCAgICAgIAAAAAAAAD////////AwMAAAAD////AwMDAwMCAgICAgIAAAAAAAADAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD/
+///////AwMDAwMAAAAD////AwMDAwMCAgIAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMD////////AwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMAAAAD/
+///////AwMCAgIAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD///8AAAAAAAD////A
+wMDAwMDAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMAAAAAAAAD////AwMCAgIAAAAAA
+AAD////AwMDAwMDAwMDAwMDAwMDAwMD///8AAAAAAAAAAAAAAAD////AwMDAwMCAgICAgIAAAAAA
+AAD////////AwMDAwMDAwMDAwMDAwMCAgIAAAAD////AwMCAgIAAAAAAAAD////AwMDAwMDAwMDA
+wMDAwMAAAAAAAACAgICAgIAAAAAAAAD////AwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDA
+wMDAwMDAwMCAgIAAAAD////AwMCAgIAAAAAAAAD////AwMDAwMDAwMDAwMAAAAAAAACAgIDAwMCA
+gIAAAAAAAADAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMDAwMDAwMDAwMCAgIAAAAD/
+///AwMCAgIAAAAAAAAD////AwMDAwMD///8AAAAAAACAgIDAwMDAwMD///8AAADAwMCAgICAgIAA
+AAAAAAD////////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgIAAAAD////AwMCAgIAAAAAAAAD/
+//////8AAAAAAACAgID///////////8AAAD////AwMCAgICAgIAAAAAAAAD////////AwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMCAgIAAAAD////AwMCAgIAAAAAAAAAAAAAAAACAgID///8AAAAA
+AAAAAAD////AwMDAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMCAgIAAAAD////AwMCAgICAgICAgICAgID///8AAAD////AwMDAwMDAwMDAwMDAwMCAgICA
+gIAAAAAAAAD////////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgIAAAACAgICA
+gICAgIDAwMD///8AAAD////AwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD////////AwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgIAAAACAgIDAwMDAwMDAwMAAAAD////AwMDA
+wMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMD///8AAACAgICAgIDAwMD////AwMCAgIAAAAD////AwMDAwMDAwMDAwMDAwMDAwMCA
+gICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD///////8AAACAgICAgIDA
+wMD///8AAAD///8AAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD////////A
+wMDAwMDAwMDAwMDAwMD///////////8AAAAAAACAgICAgIDAwMD///8AAAD///8AAAD////AwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMD///8AAAAA
+AAAAAACAgICAgICAgID///////8AAAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMD///8AAADAwMDAwMDAwMDAwMDAwMD///8AAAAA
+AAD////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD/////
+///AwMDAwMDAwMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD////AwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMCAgICAgIAAAAAAAAD////////AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA
+wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCAgICAgIAAAAAAAAD/
+////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////+AgIAAAAAAAAD/////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAA==
 }
 
 }

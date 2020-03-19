@@ -1,7 +1,7 @@
 Include App.LogMacro
 
 /// Importing this class will install App Tools properly.
-/// fork from 
+/// fork from WebTerminal 
 Class App.Installer Extends %Projection.AbstractProjection [ DependsOn = App.msg ]
 {
 
@@ -24,11 +24,13 @@ Projection Reference As Installer;
 Parameter VERSION = 1.0;
 
 /// This method is invoked when a class is compiled.
+///  d ##class(App.Installer).CreateProjection()
 ClassMethod CreateProjection(cls As %String, ByRef params) As %Status
 {
 	new $Namespace
 	set ns = $Namespace // ought to be package home namespace!
 	if $g(@$$$GNEnsConf@("HomeNamespace"))'="",$g(@$$$GNEnsConf@("HomeNamespace"))'=ns {
+		
 		 QUIT $$$OK
 	}
 	if $g(@$$$GNEnsConf@("HomeNamespace"))="" {
@@ -122,11 +124,11 @@ ClassMethod CreateProjection(cls As %String, ByRef params) As %Status
 	w !
    d ..AddAndWriteFavorite(..#AppName,"/"_..#AppCSP_"/App.LogInfo.cls",$g(ServerPort))
    d ..AddAndWriteFavorite(..#AppName_" Permission Matrx","/"_..#AppCSP_"/App.TabsPanelUikitPermissMatrx.cls?autoload=Matrix",$g(ServerPort))
-   d ..AddAndWriteFavorite(..#AppName_" Samples Admin Panel","/"_..#AppCSP_"/App.TabsPanelUikitAdmin.cls?autoload=Matrix",$g(ServerPort))
-   d ..AddAndWriteFavorite(..#AppName_" REST service Admin Panel","/"_..#AppCSP_"rest/get-html/App.TabsPanelUikitAdmin.cls?autoload=Find",$g(ServerPort))
+   d:$$$JSLibLocal ..AddAndWriteFavorite(..#AppName_" Samples Admin Panel","/"_..#AppCSP_"/App.TabsPanelUikitAdmin.cls?autoload=Matrix",$g(ServerPort))
+   d:$$$JSLibLocal ..AddAndWriteFavorite(..#AppName_" REST service Admin Panel","/"_..#AppCSP_"rest/get-html/App.TabsPanelUikitAdmin.cls?autoload=Find",$g(ServerPort))
    	w !
 	$$$NspReturn(curNs)
-    d ##class(App.net).ImportCSPFromGitHub("https://codeload.github.com/SergeyMi37/"_..#Repository_"/zip/master",..#Repository,@$$$GNEnsConf@("CSP-Path"))
+    d:$$$JSLibLocal ##class(App.net).ImportCSPFromGitHub("https://codeload.github.com/SergeyMi37/"_..#Repository_"/zip/master",..#Repository,@$$$GNEnsConf@("CSP-Path"))
     return st
 }
 
@@ -296,6 +298,11 @@ ClassMethod UnMap(fromNS As %String) As %Status
         set st = $$$ADDSC(st,$$$ADDSC($get(st1,$$$OK),$get(st2,$$$OK)))
     }
     return st
+}
+
+ClassMethod Ver() As %Status
+{
+	q "1.0.1"
 }
 
 }

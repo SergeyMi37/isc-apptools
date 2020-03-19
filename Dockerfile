@@ -13,13 +13,11 @@ RUN chown ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} /opt/irisapp
 USER irisowner
 
 COPY  Installer.cls .
-COPY  apptools.xml .
 COPY  src src
 COPY irissession.sh /
 SHELL ["/irissession.sh"]
 
 RUN \
-  do $SYSTEM.OBJ.Load("apptools.xml", "ck") \
   do $SYSTEM.OBJ.Load("Installer.cls", "ck") \
   set sc = ##class(App.Installer).setup() 
 
