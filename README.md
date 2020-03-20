@@ -48,7 +48,7 @@ Initialize interoperability and create a new test product ([thanks Dias](https:/
 ```
 IRISAPP>do ##class(App.Production).CreateProduction("IRISAPP", "Test.TestProd", "Ens.MonitorService,Ens.Alerting.AlertManager,Ens.Activity.Operation.REST")
 
-IRISAPP>do ##class(Ens.Director).StartProduction ("Test.TestProd")
+IRISAPP>do ##class(Ens.Director).StartProduction("Test.TestProd")
 ```
 
 Initialize interoperability and create a new test product in USER.
