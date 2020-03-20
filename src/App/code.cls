@@ -11,7 +11,7 @@ Class App.code [ Abstract ]
 /// d $SYSTEM.OBJ.CompilePackage("App","cukd")
 /// do $system.OBJ.Load("d:\dev\apptools\src\glb\appcachemsg.xml","ck")
 /// do $system.OBJ.Load("/backup/source/apptools/src/glb/appcachemsg.xml","ck") ; loading translate
-ClassMethod e(dir = "d:\dev\apptools\cache-iris-app-tools")
+ClassMethod e(dir = "d:\dev\isc-apptools")
 {
  d ##class(App.MSW.translate).AddLangs()
  set target=dir_$$$slash_"src"_$$$slash

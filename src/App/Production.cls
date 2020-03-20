@@ -5,9 +5,47 @@ Class App.Production [ Abstract ]
 {
 
 /// How long to wait for the product to stop before being stopped again by force (seconds)
-Parameter TIMEOUTSTOP = 120;
+Parameter TIMEOUTSTOP = 60;
 
 Parameter SettingsGN = "^%App.Productions";
+
+/// Create new Interoperability Production (from diashenrique.messageviewer.util.InstallerProduction)
+/// https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer
+/// write $System.Status.GetErrorText(##class(App.Production).CreateProduction("USER","Test.TestProd","Ens.MonitorService,Ens.Alerting.AlertManager,Ens.Activity.Operation.REST"))
+/// zn "USER" do ##class(Ens.Director).StartProduction("Test.TestProd")
+ClassMethod CreateProduction(ns = {$Namespace}, pn = "TestProduction", ConfItem = "") As %Status
+{
+	New $Namespace
+	Set $Namespace = ns
+	d ..Init(ns)
+	Set sc = $$$OK
+	Try {
+		#; create new production
+		Set class = ##class(%Dictionary.ClassDefinition).%New(pn)
+		Set class.ProcedureBlock = 1
+		Set class.Super = "Ens.Production"
+		Set class.GeneratedBy = $ClassName()
+		Set xdata = ##class(%Dictionary.XDataDefinition).%New()
+		Set xdata.Name = "ProductionDefinition"
+		Do xdata.Data.Write("<Production Name="""_pn_""" LogGeneralTraceEvents=""true""></Production>")	
+		Do class.XDatas.Insert(xdata)
+		Set sc = $$$ADDSC(sc,class.%Save())
+		Set sc = $$$ADDSC(sc,$System.OBJ.Compile(pn,"fck-dv"))
+		if ConfItem'="" {
+			Set production = ##class(Ens.Config.Production).%OpenId(pn)
+			for i=1:1:$l(ConfItem,",") { continue:$p(ConfItem,",",i)=""
+				Set item = ##class(Ens.Config.Item).%New()
+				Set item.ClassName = $p(ConfItem,",",i)
+				Do production.Items.Insert(item)
+				Set sc = $$$ADDSC(sc,production.%Save())
+			}
+		}
+	}
+    Catch (err) {
+		Set sc = $$$ADDSC(sc,err.AsStatus())
+	}
+	Return sc
+}
 
 ///  Check and save settings and status of products in all Namespaces
 ///  d ##class(App.Production).SaveStat(1)
@@ -92,7 +130,7 @@ ClassMethod CreateTaskPurge(Name As %String = "", ns = {$zu(5)}, days = 90)
 }
 
 /// Initiate all Namespaces for the Ensemble\Interoperability
-/// d ##class(App.Production).Init("APP,AAA")
+/// d ##class(App.Production).Init("USER")
 ClassMethod Init(nsList = "") As %Status
 {
  if nsList="" set nsList=##class(App.sys).ListNS(.inf,"NotPref")
@@ -140,7 +178,6 @@ ClassMethod EnsAction(ex = "", nsOnly = "", out) As %Status [ PublicList = (tPro
 			w !,ns," ",tProductionName
 			Set sc = ##class(Ens.Director).StartProduction(tProductionName) ; Quit:$$$ISERR(tSC)
 			i 'sc w $System.Status.DisplayError(sc)
-			h 60 
 		$$$forEnd	
 	}
 	if ex="auto0" {
@@ -197,34 +234,36 @@ ClassMethod ExtInfo(pClassName, ou, write = 0) As %Status
 	s ou(Name)=Description
 	;s Items={}.$$$jsonFromJSON(json).Items
 	s items=[].$$$jsonFromJSON(json)."Items"
-	for i=0:1:items.$$$jsonSize()-1 {
-		set item = items.$$$jsonGet(i)
-		i $isobject(item) {
-			s itemIn=item.$$$jsonToJSON()
-			s Enabled={}.$$$jsonFromJSON(itemIn).Enabled
-			continue:'Enabled
-			s NameIten={}.$$$jsonFromJSON(itemIn)."Name"
-			write:write !," "_NameIten
-			s ClassName={}.$$$jsonFromJSON(itemIn).ClassName
-			s ou(Name,NameIten)=$lb(ClassName,{}.$$$jsonFromJSON(itemIn).Category)
-			s Settings=[].$$$jsonFromJSON(itemIn).Settings
-			
-			for ii=0:1:Settings.$$$jsonSize()-1 {
-				set setts = Settings.$$$jsonGet(ii)
-				i $isobject(setts) {
-					s sett=setts.$$$jsonToJSON()
-					s Target={}.$$$jsonFromJSON(sett).Target
-					s NameSett={}.$$$jsonFromJSON(sett).Name
-					s Value={}.$$$jsonFromJSON(sett).Value
-					k ip
-					if Value["http" {
-						s host=$p($p($p(Value,"://",2),"/",1),":",1)
-						if host'="" s ip=##class(App.net).GetIP(host)
+	if item'="" {
+		for i=0:1:items.$$$jsonSize()-1 {
+			set item = items.$$$jsonGet(i)
+			i $isobject(item) {
+				s itemIn=item.$$$jsonToJSON()
+				s Enabled={}.$$$jsonFromJSON(itemIn).Enabled
+				continue:'Enabled
+				s NameIten={}.$$$jsonFromJSON(itemIn)."Name"
+				write:write !," "_NameIten
+				s ClassName={}.$$$jsonFromJSON(itemIn).ClassName
+				s ou(Name,NameIten)=$lb(ClassName,{}.$$$jsonFromJSON(itemIn).Category)
+				s Settings=[].$$$jsonFromJSON(itemIn).Settings
+				
+				for ii=0:1:Settings.$$$jsonSize()-1 {
+					set setts = Settings.$$$jsonGet(ii)
+					i $isobject(setts) {
+						s sett=setts.$$$jsonToJSON()
+						s Target={}.$$$jsonFromJSON(sett).Target
+						s NameSett={}.$$$jsonFromJSON(sett).Name
+						s Value={}.$$$jsonFromJSON(sett).Value
+						k ip
+						if Value["http" {
+							s host=$p($p($p(Value,"://",2),"/",1),":",1)
+							if host'="" s ip=##class(App.net).GetIP(host)
+						}
+						if NameSett="HTTPServer" s:Value'="" ip=##class(App.net).GetIP(Value)
+						write:write !,"  "_NameSett_" "_Value_" "_$g(ip)
+						s ou(Name,NameIten,NameSett)=Value
+						s:$g(ip)'="" ou(Name,NameIten,NameSett,"ip")=$g(ip)
 					}
-					if NameSett="HTTPServer" s:Value'="" ip=##class(App.net).GetIP(Value)
-					write:write !,"  "_NameSett_" "_Value_" "_$g(ip)
-					s ou(Name,NameIten,NameSett)=Value
-					s:$g(ip)'="" ou(Name,NameIten,NameSett,"ip")=$g(ip)
 				}
 			}
 		}
@@ -233,8 +272,8 @@ ClassMethod ExtInfo(pClassName, ou, write = 0) As %Status
 }
 
 /// Automatic generate documenation
-/// w $System.Status.GetErrorText(##class(App.Production).GenDoc("/home/project/shared/gen-doc.xml"))
-ClassMethod GenDoc(filename = "", namespacelist = "", title = "", title2 = "", ByRef shortcode, ByRef shortulink, ByRef all) As %Status
+/// d ##class(App.Production).GenDoc("/home/project/shared/gen-doc.xml")
+ClassMethod GenDoc(filename = "", namespacelist = "", title = "", subtitle = "", ByRef shortcode, ByRef shortulink, ByRef all) As %Status
 {
 	if '##class(App.files).OpenFile(filename) quit:$$$ERROR($$$GeneralError,"Error open file "_filename)
 	use filename		
@@ -245,7 +284,7 @@ ClassMethod GenDoc(filename = "", namespacelist = "", title = "", title2 = "", B
 		<title>#(title)#</title>
 	</head>
 	<body><a name='0'>
-		#(title2)#
+		#(subtitle)#
 		>
 	if '$d(shortcode) {
 		s listns=##class(App.sys).ListNS(.inf,"NotPref,Ens")

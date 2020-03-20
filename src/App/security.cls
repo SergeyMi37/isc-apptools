@@ -1,5 +1,6 @@
 Include App.LogMacro
 
+/// Security utilities
 Class App.security [ Abstract, DependsOn = App.msg ]
 {
 
@@ -22,11 +23,12 @@ Class App.security [ Abstract, DependsOn = App.msg ]
 /// 	sECPIP - list of ip addresses with a semicolon for which to allow connection to the ECP server.
 /// 	AuthLDAP = 1 In addition to the password, also enable LDAP authentication
 /// 	Application example:
-/// 	d ##class(App.security).LockDown("qwe123!@#",.msg,1,1,0,0,0,0,"127.0.0.1","127.0.0.1")
-/// 	d ##class(App.security).LockDown("qwe123!@#",.msg,1,1,0,0,1,0,"127.0.0.1","127.0.0.1",,1)
+/// 	d ##class(App.security).LockDown("NewPassword123",.msg,1,1,0,0,0,0,"127.0.0.1","127.0.0.1")
+/// 	d ##class(App.security).LockDown("NewPassword123",.msg,1,1,0,0,1,0,"127.0.0.1","127.0.0.1",,1)
 ClassMethod LockDown(newPassword = "", Warn, sBindings = "", sCachedirect = "", InactiveLimit = 90, DemoDelete = 0, AuditOn = 1, sECP = "", sBindingsIP = "", sCachedirectIP = "", sECPIP = "", AuthLDAP = 0) As %Status
 {
-	set ons = $zu(5)
+	new $namespace
+	set $namespace="%SYS"
 	write !,"Applications and services will be authenticated by "_$s('AuthLDAP:"password",1:"password and LDAP")
 	set AutheEnabled=$s(AuthLDAP:2080,1:32)
 	if DemoDelete,$zv["IRIS" set DemoDelete=0	
@@ -177,7 +179,6 @@ ClassMethod LockDown(newPassword = "", Warn, sBindings = "", sCachedirect = "", 
 		}
 		do rs.Close()
 	}
-	zn ons
 	quit $$$OK
 }
 
@@ -250,7 +251,8 @@ ClassMethod GetPreparedUsers() As %String
 /// do ##class(App.security).ChangePassword("msw", ##class(App.security).GetPreparedUsers())
 ClassMethod ChangePassword(newPassword = "", UsersList = "") As %Status
 {
-	zn "%sys"
+	new $namespace
+	set $namespace="%SYS"
 	set result=##CLASS(%ResultSet).%New("%DynamicQuery:SQL")
 	set sql="select NameLowerCase FROM Security.Users where NameLowerCase in ('"_$replace($zconvert(UsersList,"L"),",","','")_"')"
 	;w !,sql
