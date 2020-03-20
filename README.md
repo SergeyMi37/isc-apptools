@@ -30,41 +30,42 @@ $ docker-compose up -d
 
 ## How to Test it
 
-Let's create the apptools, apptoolsresr applications and write the mapping of the App package in %All
 Open IRIS terminal:
 
 ```
 $ docker-compose exec iris iris session iris
 USER>zn "IRISAPP"
+```
 
+Let's create the apptools, apptoolsresr applications and write the mapping of package App in %All
+```
 IRISAPP>do ##class(App.Installer).CreateProjection()
 
 ```
-##Use Case Product Management
-initialize interoperability and create a new test product ([thanks Dias](https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer)) in IRISAPP
+## Use Case Product Management
+
+Initialize interoperability and create a new test product ([thanks Dias](https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer)) in IRISAPP.
 ```
 IRISAPP>do ##class(App.Production).CreateProduction("IRISAPP", "Test.TestProd", "Ens.MonitorService,Ens.Alerting.AlertManager,Ens.Activity.Operation.REST")
 
 IRISAPP>do ##class(Ens.Director).StartProduction ("Test.TestProd")
 ```
 
-initialize interoperability and create a new test product in USER
+Initialize interoperability and create a new test product in USER.
 ```
 zn "user"
 USER>do ##class(App.Production).CreateProduction("USER", "Test.TestProd2", "Ens.MonitorService,Ens.Alerting.AlertManager,Ens.Activity.Operation.REST")
-```
-Run
-```
+
 IRISAPP>do ##class(Ens.Director).StartProduction("Test.TestProd2")
 ```
 When you administer more than 2 products, the scheduled server restart turns into a monotonous routine operation of manually stopping each product. To automate this, a set of utilities is used.
 
-Preserve statuse and stop products in all namespace
+Preserve statuse and stop products in all namespace.
 ```
 IRISAPP>do ##class(App.Production).SaveAndStop()
 ```
 
-All products are stopped, you can restart the server
+All products are stopped, you can restart the server.
 After starting the DBMS, you can start all the products that were launched before.
 ```
 IRISAPP>do ##class(App.Production).StartAll()
@@ -72,14 +73,14 @@ IRISAPP>do ##class(App.Production).StartAll()
 
 Create message cleaning tasks for all products, leaving in the last 30 days
 ```
-IRISAPP>do ## class(App.Production).CreateTasksPurgeMess(30)
+IRISAPP>do ##class(App.Production).CreateTasksPurgeMess(30)
 ```
 
-get a class description, optionally with a superclass
+Get a class description, optionally with a superclass
 ```
 IRISAPP>do ##class(App.LogInfoPane).GetClassDef("Test.TestProd2","",.def,1)
 
-IRISAPP> zw def
+IRISAPP>zw def
 def("ClassName","Ens.Production")=""
 def("ClassName","Ens.Production","super") = "%RegisteredObject,Ens.Settings"
 def("ClassName","Ens.Settings")=""
@@ -93,7 +94,8 @@ Create html format documentation in the form of tables for all products, includi
 ```
 IRISAPP>do ##class(App.Production).GenDoc("/usr/irissys/csp/user/gen-doc.xml")
 ```
-##Use Case Security Management
+
+## Use Case Security Management
 
 You can replace the shared password if the password of the predefined system users has been compromised
 ```
