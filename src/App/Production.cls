@@ -275,9 +275,7 @@ ClassMethod ExtInfo(pClassName, ou, write = 0) As %Status
 /// d ##class(App.Production).getModelTable("Mvk.model.",.result)
 ClassMethod getModelTable(like, all) As %Status
 {
-	;set sqlclass = "SELECT Name Класс, Description Описание FROM ""%Dictionary"".ClassDefinition WHERE Name LIKE 'Mvk.model.%'"
 	set sql = "SELECT cls.Name as ""Class Name"", cls.Description as ""Description"", prop.Name ""Property"",  prop.Type ""Type"",  prop.Description ""Description property"" FROM ""%Dictionary"".ClassDefinition cls  JOIN ""%Dictionary"".PropertyDefinition prop ON cls.Name = prop.parent WHERE cls.Name LIKE '"_like_"%'"
-	;w !,sql	
 	;Genaration table for HTML
 	set result="^||tmpPackgetModelTable"
 	set st=##class(App.sys).SaveSQL(sql,result)

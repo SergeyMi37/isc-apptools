@@ -5,7 +5,7 @@ Class App.security [ Abstract, DependsOn = App.msg ]
 {
 
 /// Increase system security to LockDown
-/// The method disables services and applications as in LockDown. Deletes the areas "DOCBOOK", "ENSDEMO", "SAMPLES"
+/// The method disables services and applications as in LockDown. Deletes the namespaces "DOCBOOK", "ENSDEMO", "SAMPLES"
 /// The method enables auditing and configures registration of all events in the portal, except for switching the log
 /// and modification of system properties
 /// For all predefined users, change the password and change the properties as in LockDown
