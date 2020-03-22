@@ -1,18 +1,11 @@
 ![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico)
-![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/logo.jpg) 
-
 ## isc-apptools
-Application Tools for technical support and DBMS-Ensemble-Interoperability administrator. 
-
-View globals arrays, execute queries (including JDBC/ODBC), sending results to email as XLS files. Viewer class instances with СRUD editing. A few simple graphs on the protocols of the system.
-
-CSP application but based on jQuery-Ui, Uikit, chart.js, jsgrid.js
+This solution allows saving the results of query execution (including JDBC / ODBC) to global arrays, sending results by e-mail in the form of archives of xls files, group work with products from different areas, and increasing security settings.
 
 ## Prerequisites
 Make sure you have [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Docker desktop](https://www.docker.com/products/docker-desktop) installed.
 
 ## Installation 
-
 Clone/git pull the repo into any local directory
 
 ```
@@ -32,7 +25,6 @@ $ docker-compose up -d
 ```
 
 ## How to Test it
-
 Open IRIS terminal:
 
 ```
@@ -45,8 +37,45 @@ Let's create the apptools, apptoolsresr applications and write the mapping of pa
 IRISAPP>do ##class(App.Installer).CreateProjection()
 
 ```
-## Use Case Product Management
+## Save queries to the global for future use in front-end applications
+```
+IRISAPP>d ##class(App.sys).SaveQuery("%SYSTEM.License:Counts", "^test",123)
 
+IRISAPP>zw ^test
+^test("%SYSTEM.License:Counts",123,0,1)="InstanceLicenseUse"
+^test("%SYSTEM.License:Counts",123,0,2)="License Units"
+^test("%SYSTEM.License:Counts",123,1,1)="Total   Authorized LU"
+^test("%SYSTEM.License:Counts",123,1,2)=5
+...
+
+IRISAPP>zn "%sys"
+ 
+%SYS>d ##class(App.sys).SaveQuery("SYS.Database:FreeSpace")
+ 
+%SYS>zw ^%App.Task
+^%App.Task("SYS.Database:FreeSpace","2020-03-22 09:36:49",0,1)="DatabaseName"
+^%App.Task("SYS.Database:FreeSpace","2020-03-22 09:36:49",0,2)="Directory"
+^%App.Task("SYS.Database:FreeSpace","2020-03-22 09:36:49",0,3)="MaxSize"
+^%App.Task("SYS.Database:FreeSpace","2020-03-22 09:36:49",0,4)="Size"
+^%App.Task("SYS.Database:FreeSpace","2020-03-22 09:36:49",0,5)="ExpansionSize"
+...
+```
+%SYS>do ##class(App.sys).SaveSQL("select NameLowerCase,Description,Name FROM Security.Roles where Name['%'", "^logMSW2")
+ 
+%SYS>zw ^logMSW2                                                               
+^logMSW2(-3,"sql")=$lb("select NameLowerCase,Description,Name FROM Security.Roles where Name'%'")
+^logMSW2(-3,"timestamp")=$lb("2020-03-22 09:49:50","2020-03-22 09:49:50",0)
+^logMSW2(-1,"Description")=2
+^logMSW2(-1,"Name")=3
+^logMSW2(-1,"NameLowerCase")=1
+^logMSW2(0)=$lb("NameLowerCase","Description","Name")
+^logMSW2(1)=$lb("%all","Роль Суперпользователя","%All")
+^logMSW2(2)=$lb("%db_%default","Доступ на чтение/запись для ресурса","%DB_%DEFAULT")
+...
+
+do ##class(App.sys).SqlToDSN("SELECT * FROM xxmv.xx_t359_pzn","JDBC-DSN","^tmpMSWq"))
+
+## Use Case Product Management
 Initialize interoperability and create a new test product ([thanks Dias](https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer)) in IRISAPP.
 ```
 IRISAPP>do ##class(App.Production).CreateProduction("IRISAPP", "Test.TestProd", "Ens.MonitorService,Ens.Alerting.AlertManager,Ens.Activity.Operation.REST")
@@ -99,7 +128,6 @@ IRISAPP>do ##class(App.Production).GenDoc("/usr/irissys/csp/user/gen-doc.xml")
 ```
 
 ## Use Case Security Management
-
 You can replace the shared password if the password of the predefined system users has been compromised
 ```
 IRISAPP>do ##class(App.security).ChangePassword("NewPass231",##class(App.security).GetPreparedUsers())
