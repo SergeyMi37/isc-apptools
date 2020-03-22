@@ -60,10 +60,10 @@ IRISAPP>zn "%sys"
 ^%App.Task("SYS.Database:FreeSpace","2020-03-22 09:36:49",0,5)="ExpansionSize"
 ...
 ```
-%SYS>do ##class(App.sys).SaveSQL("select NameLowerCase,Description,Name FROM Security.Roles where Name['%'", "^logMSW2")
- 
+%SYS>do ##class(App.sys).SaveSQL("select NameLowerCase,Description,Name FROM Security.Roles where Name['DB'", "^logMSW2")
+ ```
 %SYS>zw ^logMSW2                                                               
-^logMSW2(-3,"sql")=$lb("select NameLowerCase,Description,Name FROM Security.Roles where Name'%'")
+^logMSW2(-3,"sql")=$lb("select NameLowerCase,Description,Name FROM Security.Roles where Name'DB'")
 ^logMSW2(-3,"timestamp")=$lb("2020-03-22 09:49:50","2020-03-22 09:49:50",0)
 ^logMSW2(-1,"Description")=2
 ^logMSW2(-1,"Name")=3
@@ -74,6 +74,7 @@ IRISAPP>zn "%sys"
 ...
 
 do ##class(App.sys).SqlToDSN("SELECT * FROM xxmv.xx_t359_pzn","JDBC-DSN","^tmpMSWq"))
+```
 
 ## Use Case Product Management
 Initialize interoperability and create a new test product ([thanks Dias](https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer)) in IRISAPP.
