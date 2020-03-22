@@ -1,4 +1,6 @@
-![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico) 
+![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico)
+![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/logo.jpg) 
+
 ## isc-apptools
 Application Tools for technical support and DBMS-Ensemble-Interoperability administrator. 
 
