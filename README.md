@@ -221,6 +221,23 @@ For ECP configurations, you need to add the addresses of all servers and clients
 Apply Security settings to "LockDown"
 ```
 IRISAPP>do ##class(App.security).LockDown("NewPassword123",.msg,1,1,0,0)
+
+Applications and services will be authenticated by password
+Password is reset to predefined users
+Modification of service properties:
+%service_cachedirect: Error=ERROR #787: Service %Service_CacheDirect not allowed by license
+Passwords are created for all CSP applications.
+There is a modification of the basic system settings
+Event Setup AUDIT :
+%System/%DirectMode/DirectMode changed
+%System/%Login/Login changed
+%System/%Login/Logout changed
+%System/%Login/Terminate changed
+%System/%Security/Protect changed
+%System/%System/JournalChange changed
+%System/%System/RoutineChange changed
+%System/%System/SuspendResume changed
+
 ```
 
 All other features of the interface part of the software solution can be found in the 
