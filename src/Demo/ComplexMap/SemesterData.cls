@@ -1,4 +1,0 @@
-Class Demo.ComplexMap.SemesterData
-{
-
-}
