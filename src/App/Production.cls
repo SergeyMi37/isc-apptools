@@ -272,7 +272,7 @@ ClassMethod ExtInfo(pClassName, ou, write = 0) As %Status
 	q $$$OK
 }
 
-/// d ##class(App.Production).getModelTable("Mvk.model.",.result)
+/// d ##class(App.Production).getModelTable("User.model.",.result)
 ClassMethod getModelTable(like, all) As %Status
 {
 	set sql = "SELECT cls.Name as ""Class Name"", cls.Description as ""Description"", prop.Name ""Property"",  prop.Type ""Type"",  prop.Description ""Description property"" FROM ""%Dictionary"".ClassDefinition cls  JOIN ""%Dictionary"".PropertyDefinition prop ON cls.Name = prop.parent WHERE cls.Name LIKE '"_like_"%'"

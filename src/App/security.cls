@@ -9,16 +9,16 @@ Class App.security [ Abstract, DependsOn = App.msg ]
 /// The method enables auditing and configures registration of all events in the portal, except for switching the log
 /// and modification of system properties
 /// For all predefined users, change the password and change the properties as in LockDown
-/// 	newPassword - new single password instead of SYS. For LockDown security level, it has an 8.32ANP pattern
-/// 	sBindings = 1 Service% service_bindings enable
-/// 	sCachedirect = 1 Service% service_cachedirect enable
+/// 	newPassword - new single password instead of %SYS. For LockDown security level, it has an 8.32ANP pattern
+/// 	sBindings = 1 Service %Service_bindings enable
+/// 	sCachedirect = 1 Service %Service_cachedirect enable
 /// 	InactiveLimit=90  
 /// 	DemoDelete=0 Demoens,Samples namespaces are being deleted 
 /// 	AuditOn=1 
-/// 	sECP = 1 Service% service_ecp enable
+/// 	sECP = 1 Service %Service_ecp enable
 /// 	sBindingsIP - list of ip addresses with a semicolon for which to allow CacheStudio connection.
 /// 
-/// For ECP configurations, you need to add the addresses of all servers and clients to allow connection on% Net.RemoteConnection to remove "abandoned" tasks
+/// For ECP configurations, you need to add the addresses of all servers and clients to allow connection on %Net.RemoteConnection to remove "abandoned" tasks
 /// 	sCachedirectIP - list of ip addresses with a semicolon for which to allow legacy applications connection.
 /// 	sECPIP - list of ip addresses with a semicolon for which to allow connection to the ECP server.
 /// 	AuthLDAP = 1 In addition to the password, also enable LDAP authentication
