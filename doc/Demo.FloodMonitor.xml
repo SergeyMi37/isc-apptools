@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26">
+<Class name="Demo.FloodMonitor.BusinessOperation">
+<ClassType/>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.BusinessOperation</Super>
+<TimeCreated>65460,79532.423025</TimeCreated>
+
+<Parameter name="INVOCATION">
+<Description>
+2 modes: Queue, InProc</Description>
+<Default>Queue</Default>
+</Parameter>
+
+<XData name="MessageMap">
+<Data><![CDATA[
+<MapItem MessageType="Demo.FloodMonitor.WaterLevelRequest">
+<Method>TestWaterLevel</Method>
+</MapItem>
+]]></Data>
+</XData>
+
+<Method name="TestWaterLevel">
+<Description>
+An operation that tests the current water level.</Description>
+<FormalSpec>pRequest:Demo.FloodMonitor.WaterLevelRequest,*pResponse:Demo.FloodMonitor.WaterLevelResponse</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	$$$TRACE("Registered water level of '"_pRequest.WaterLevel_"' at location '"_pRequest.Location_"'")
+	Set tFlag=$e(pRequest.Location,4)
+	If tFlag="R" {
+		If pRequest.Location["Error" Quit $$$ERROR($$$GeneralError,"User triggered error")
+		Set pResponse=##class(Demo.FloodMonitor.WaterLevelResponse).%New()
+		Set pResponse.IsTooHigh=pRequest.WaterLevel>500
+		$$$TRACE("Registration of water level finished.")
+		Quit $$$OK
+	} Else {
+		Quit $$$EnsError($$$GeneralError,"User triggered error")
+	}
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.BusinessService">
+<ClassType/>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.BusinessService</Super>
+<TimeCreated>65460,79532.496792</TimeCreated>
+
+<Method name="OnProcessInput">
+<FormalSpec>pInput:Ens.StringContainer,*pOutput:Ens.StringContainer</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set $ZT="Trap",tSC=$$$OK
+	do {
+		Set tInput=pInput.StringValue
+		If tInput="?" Do ..Help() Quit
+		Set tRequest=##class(Demo.FloodMonitor.WaterLevelRequest).%New()
+		Set tRequest.Location=$p(tInput,":",1)
+		Set tRequest.WaterLevel=$p(tInput,":",2)
+		Set pResult=""
+		Set tFlag=$e(tRequest.Location,1,2)
+		If tFlag="CA" Set tSC=..SendRequestAsync("Demo.FloodMonitor.CustomBusinessProcess",tRequest) Quit
+		If tFlag="GA" Set tSC=..SendRequestAsync("Demo.FloodMonitor.GeneratedBusinessProcess",tRequest) Quit
+		If tFlag="CS" Set tSC=..SendRequestSync("Demo.FloodMonitor.CustomBusinessProcess",tRequest,.tResponse) Quit
+		If tFlag="GS" Set tSC=..SendRequestSync("Demo.FloodMonitor.GeneratedBusinessProcess",tRequest,.tResponse) Quit
+		Set tSC=$$$ERROR($$$GeneralError,"User triggered error")
+	} while (0)
+	If $$$ISOK(tSC) {
+		If $IsObject($g(tResponse)) {
+			Set pOutput=##class(Ens.StringContainer).%New("Return result is: "_tResponse.IsTooHigh)
+		} Else {
+			Set pOutput=##class(Ens.StringContainer).%New("")
+		}
+	}
+Exit
+	Quit tSC
+Trap
+	Set $ZT="",tSC=$$$EnsSystemError
+	Goto Exit
+]]></Implementation>
+</Method>
+
+<Method name="Help">
+<ClassMethod>1</ClassMethod>
+<Implementation><![CDATA[
+	Write !
+	Write "Please enter the water level request at the prompt.",!
+	Write "Enter the request in the format of location:waterlevel.",!
+	Write !
+	Write "The first 4 letters in the location name determine the path of execution",!
+	Write "The possible values are: (GCE)(ASE)(RASE)(RE)",!
+	Write "1st letter: G=GeneratedBusinessProcess, C=CustomBusinessProcess, E=Error",!
+	Write "2nd letter: A=SendRequestAsync, S=SendRequestSync, E=Error",!
+	Write "3rd letter: R=Reply, A=forwardAsynchronously, S=forwardSynchronously, E=Error",!
+	Write "4th letter: R=reply, E=Error",!
+	Write !
+	Write "One example of ExecutionDirection is ""CSAR""",!
+	Write !
+	Quit
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.CustomBusinessProcess">
+<ClassType>persistent</ClassType>
+<IncludeCode>Ensemble</IncludeCode>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.BusinessProcess</Super>
+<TimeCreated>65460,79532.578454</TimeCreated>
+
+<Parameter name="INVOCATION">
+<Description>
+2 modes: Queue, InProc</Description>
+<Default>Queue</Default>
+</Parameter>
+
+<Method name="OnRequest">
+<FormalSpec>request:Ens.Request,*response:Ens.Response</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set tFlag=$e(request.Location,3)
+	If tFlag="R" {
+		$$$TRACE("Registered water level of '"_request.WaterLevel_"' at location '"_request.Location_"'")
+		$$$TRACE("Request handled locally")
+		Set response=##class(Demo.FloodMonitor.WaterLevelResponse).%New()
+		Set response.IsTooHigh=request.WaterLevel>500
+		Quit $$$OK
+	} Elseif tFlag="S" {
+		;break
+		$$$TRACE("Registered water level of '"_request.WaterLevel_"' at location '"_request.Location_"'")
+		$$$TRACE("Request forwarded synchronously")
+		Set tSC=..SendRequestSync("Demo.FloodMonitor.BusinessOperation",request,.response) If $$$ISERR(tSC) Quit tSC
+		Quit $$$OK
+	} Elseif tFlag="A" {
+		$$$TRACE("Registered water level of '"_request.WaterLevel_"' at location '"_request.Location_"'")
+		$$$TRACE("Request forwarded asynchronously")
+		#; how can we do fire-and-forget call?
+		Set tSC=..SendRequestAsync("Demo.FloodMonitor.BusinessOperation",request,1,"ABC") If $$$ISERR(tSC) Quit tSC
+		Quit $$$OK
+	} Else {
+		Quit $$$EnsError($$$GeneralError,"User triggered error")
+	}
+]]></Implementation>
+</Method>
+
+<Method name="OnResponse">
+<FormalSpec><![CDATA[request:Ens.Request,&response:Ens.Response,callrequest:Ens.Request,callresponse:Ens.Response,pCompletionKey:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	$$$TRACE("Asynchronous request returned")
+	Set response=callresponse
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+</Storage>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.GeneratedBusinessProcess.Context">
+<Description>
+This class is generated by the Demo.FloodMonitor.GeneratedBusinessProcess BPL class.
+This class should not be edited or modified in any way.
+Do not make direct use of this class in your application.</Description>
+<ClassType>persistent</ClassType>
+<CompileAfter>Demo.FloodMonitor.GeneratedBusinessProcess</CompileAfter>
+<IncludeCode/>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.BP.Context</Super>
+<TimeCreated>65460,79736.826997</TimeCreated>
+<GeneratedBy>Ens.BPL.Compiler.CLS</GeneratedBy>
+
+<Method name="OnResponse1">
+<Description>
+Response Handler for call to Demo.FloodMonitor.BusinessOperation</Description>
+<FormalSpec>process:Ens.BusinessProcess,context:Ens.BP.Context,request:Demo.FloodMonitor.WaterLevelRequest,response:Demo.FloodMonitor.WaterLevelResponse,callrequest:Demo.FloodMonitor.WaterLevelRequest,callresponse:Demo.FloodMonitor.WaterLevelResponse,callname:%String</FormalSpec>
+<Language>objectscript</Language>
+<PublicList>process,context</PublicList>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ Set $ZT="Trap",status=$$$OK do {
+ Set status=$$$OK,response.IsTooHigh=callresponse.IsTooHigh
+ If $$$ISERR(status) Quit
+ } while (0)
+Exit Quit status
+Trap Set $ZT="",status=##class(Ens.Util.Error).EnsSystemError("Demo.FloodMonitor.GeneratedBusinessProcess.Thread1","OnResponse1")
+ Goto Exit
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+</Storage>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.GeneratedBusinessProcess.Thread1">
+<Description>
+This class is generated by the Demo.FloodMonitor.GeneratedBusinessProcess BPL class.
+This class should not be edited or modified in any way.
+Do not make direct use of this class in your application.</Description>
+<ClassType>persistent</ClassType>
+<CompileAfter>Demo.FloodMonitor.GeneratedBusinessProcess</CompileAfter>
+<IncludeCode/>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.BP.Thread</Super>
+<TimeCreated>65460,79736.827222</TimeCreated>
+<GeneratedBy>Ens.BPL.Compiler.CLS</GeneratedBy>
+
+<Method name="S1">
+<FormalSpec>process:Ens.BusinessProcess,context:Ens.BP.Context,synctimedout:%Boolean,syncresponses:%ArrayOfObjects(ELEMENTTYPE="%Library.Persistent"),request:%Library.Persistent,response:%Library.Persistent</FormalSpec>
+<Language>objectscript</Language>
+<PublicList>process,context</PublicList>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ Set $ZT="Trap",status=$$$OK do {
+ #; --- Begin Call CallBusinessOperation1 ---
+ #; --- Begin Request ---
+ Set callrequest=##class(Demo.FloodMonitor.WaterLevelRequest).%New()
+ If '$IsObject(callrequest) Set status=%objlasterror Quit
+ Set status=$$$OK,callrequest.Location=request.Location
+ If $$$ISERR(status) Quit
+ Set status=$$$OK,callrequest.WaterLevel=request.WaterLevel
+ If $$$ISERR(status) Quit
+ Set status=..MakeAsyncCall("OnResponse1","Demo.FloodMonitor.BusinessOperation",callrequest,"CallBusinessOperation1",1,0,"CallBusinessOperation1",0)
+ If $$$ISERR(status) Quit
+ Kill callrequest
+ #; --- End Request ---
+ #; --- End Call CallBusinessOperation1 ---
+ Do ..%PendingResponses.Clear(),..%SyncResponses.Clear()
+ Set ..%SyncTimedOut=0,..%PendingTimeout="",..%PendingAlarmHandle="",..%SyncName=""
+ If ..%Process.IsResponsePending("CallBusinessOperation1") Do ..%PendingResponses.SetAt("","CallBusinessOperation1")
+ If ..%PendingResponses.Count()=0 {
+    Set ..%NextState="S3"
+ } else {
+    Set ..%NextState="S2",..%Wait=1
+ }
+ } while (0)
+Exit Quit ..ManageState(status)
+Trap Set $ZT="",status=..ManageStatus(status,"S1") Goto Exit
+]]></Implementation>
+</Method>
+
+<Method name="S2">
+<FormalSpec>process:Ens.BusinessProcess,context:Ens.BP.Context,synctimedout:%Boolean,syncresponses:%ArrayOfObjects(ELEMENTTYPE="%Library.Persistent"),request:%Library.Persistent,response:%Library.Persistent</FormalSpec>
+<Language>objectscript</Language>
+<PublicList>process,context</PublicList>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ Set $ZT="Trap",status=$$$OK do {
+ If ..%PendingResponses.Count()=0 {
+    Set ..%NextState="S3"
+ } else {
+    Set ..%NextState="S2",..%Wait=1
+ }
+ } while (0)
+Exit Quit ..ManageState(status)
+Trap Set $ZT="",status=..ManageStatus(status,"S2") Goto Exit
+]]></Implementation>
+</Method>
+
+<Method name="S3">
+<FormalSpec>process:Ens.BusinessProcess,context:Ens.BP.Context,synctimedout:%Boolean,syncresponses:%ArrayOfObjects(ELEMENTTYPE="%Library.Persistent"),request:%Library.Persistent,response:%Library.Persistent</FormalSpec>
+<Language>objectscript</Language>
+<PublicList>process,context</PublicList>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ Set $ZT="Trap",status=$$$OK do {
+ Do process.ClearAllPendingResponses()
+ Set ..%NextState="Stop"
+ } while (0)
+Exit Quit ..ManageState(status)
+Trap Set $ZT="",status=..ManageStatus(status,"S3") Goto Exit
+]]></Implementation>
+</Method>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+</Storage>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.GeneratedBusinessProcess">
+<ClassType>persistent</ClassType>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.BusinessProcessBPL</Super>
+<TimeCreated>65460,79532.738256</TimeCreated>
+
+<Parameter name="INVOCATION">
+<Description>
+2 modes: Queue, InProc</Description>
+<Default>Queue</Default>
+</Parameter>
+
+<XData name="BPL">
+<XMLNamespace>http://www.intersystems.com/bpl</XMLNamespace>
+<Data><![CDATA[
+<process request="Demo.FloodMonitor.WaterLevelRequest" response="Demo.FloodMonitor.WaterLevelResponse">
+<sequence>
+<call name="CallBusinessOperation1" target="Demo.FloodMonitor.BusinessOperation" async="1">
+<request type="Demo.FloodMonitor.WaterLevelRequest">
+<assign property="callrequest.Location" value="request.Location"/>
+<assign property="callrequest.WaterLevel" value="request.WaterLevel"/>
+</request>
+<response type="Demo.FloodMonitor.WaterLevelResponse">
+<assign property="response.IsTooHigh" value="callresponse.IsTooHigh"/>
+</response>
+</call>
+<sync calls="CallBusinessOperation1"/>
+</sequence>
+</process>
+]]></Data>
+</XData>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+</Storage>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.Production">
+<ClassType/>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.Production</Super>
+<TimeCreated>65460,79532.807055</TimeCreated>
+
+<XData name="ProductionDefinition">
+<Data><![CDATA[
+<Production Name="Demo.FloodMonitor.Production">
+  <ActorPoolSize>1</ActorPoolSize>
+  <Item Name="Demo.FloodMonitor.BusinessService" ClassName="Demo.FloodMonitor.BusinessService" PoolSize="0" Enabled="true" Foreground="false" InactivityTimeout="0">
+  </Item>
+  <Item Name="Demo.FloodMonitor.CustomBusinessProcess" ClassName="Demo.FloodMonitor.CustomBusinessProcess" PoolSize="1" Enabled="true" Foreground="false" InactivityTimeout="0">
+  </Item>
+  <Item Name="Demo.FloodMonitor.GeneratedBusinessProcess" ClassName="Demo.FloodMonitor.GeneratedBusinessProcess" PoolSize="1" Enabled="true" Foreground="false" InactivityTimeout="0">
+  </Item>
+  <Item Name="Demo.FloodMonitor.BusinessOperation" ClassName="Demo.FloodMonitor.BusinessOperation" PoolSize="1" Enabled="true" Foreground="false" InactivityTimeout="0">
+  </Item>
+</Production>
+]]></Data>
+</XData>
+
+<Method name="Test">
+<ClassMethod>1</ClassMethod>
+<Implementation><![CDATA[
+	Do ..Start()
+	;
+	Set tSC=##class(Ens.Director).CreateBusinessService("Demo.FloodMonitor.BusinessService",.tBusinessService)
+	If $$$ISERR(tSC) Do $system.OBJ.DisplayError(tSC) Quit
+	For {
+		Read !,"location:waterlevel>",tInput,! Quit:tInput=""
+		If tInput="?" Do ##class(Demo.FloodMonitor.BusinessService).Help() Continue
+		Set tSC=tBusinessService.ProcessInput(##class(Ens.StringContainer).%New(tInput),.tOutput)
+		If 'tSC Do $system.Status.DisplayError(tSC) Continue
+		Write !,tOutput.StringValue
+	}
+	Set tBusinessService = $$$NULLOREF
+	;
+	Do ..Stop()
+	;
+	Quit
+]]></Implementation>
+</Method>
+
+<Method name="TestAll">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>bsmode="Queue",bomode="Queue"</FormalSpec>
+<Implementation><![CDATA[
+	DO ..TestOneInvocation("InProc","InProc")
+	DO ..TestOneInvocation("InProc","Queue" )
+	DO ..TestOneInvocation("Queue", "InProc")
+	DO ..TestOneInvocation("Queue", "Queue" )
+	Quit
+]]></Implementation>
+</Method>
+
+<Method name="TestOneInvocation">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>bsmode,bomode</FormalSpec>
+<Implementation><![CDATA[
+	Do ..ChangeInvocation("Demo.FloodMonitor.CustomBusinessProcess",bsmode)
+	Do ..ChangeInvocation("Demo.FloodMonitor.GeneratedBusinessProcess",bsmode)
+	Do ..ChangeInvocation("Demo.FloodMonitor.BusinessOperation",bomode)
+	;
+	Do ..Start()
+	;
+	Set tSC=##class(Ens.Director).CreateBusinessService("Demo.FloodMonitor.BusinessService",.tBusinessService)
+	If $$$ISERR(tSC) Do $system.OBJ.DisplayError(tSC) Quit
+	For A="C","G" {
+		For B="A","S","E" {
+			For C="R","A","S","E" {
+				For D="R","E" {
+					Set tInput=A_B_C_D_":999"
+					Write !,"INPUT=",tInput
+					Set tSC=tBusinessService.ProcessInput(##class(Ens.StringContainer).%New(tInput),.tOutput)
+					Write ",ISERR=",$$$ISERR(tSC)
+					If $$$ISOK(tSC) Write ",OUTPUT=",tOutput.StringValue
+				}
+			}
+		}
+	}
+	Set tBusinessService = $$$NULLOREF
+	;
+	Do ..Stop()
+	;
+	Quit
+]]></Implementation>
+</Method>
+
+<Method name="ChangeInvocation">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>classname,invocation</FormalSpec>
+<Implementation><![CDATA[
+	If ^oddDEF(classname,$$$cCLASSparameter,"INVOCATION",$$$cPARAMdefault)'=invocation {
+		Set ^oddDEF(classname,$$$cCLASSparameter,"INVOCATION",$$$cPARAMdefault)=invocation
+		Do $system.OBJ.Compile(classname,"k-u")
+	}
+	Quit
+]]></Implementation>
+</Method>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.WaterLevelRequest">
+<ClassType>persistent</ClassType>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.Request</Super>
+<TimeCreated>65460,79532.880619</TimeCreated>
+
+<Property name="Location">
+<Type>%String</Type>
+</Property>
+
+<Property name="WaterLevel">
+<Type>%Integer</Type>
+</Property>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DefaultData>WaterLevelRequestDefaultData</DefaultData>
+<Data name="WaterLevelRequestDefaultData">
+<Subscript>"WaterLevelRequest"</Subscript>
+<Value name="1">
+<Value>Location</Value>
+</Value>
+<Value name="2">
+<Value>WaterLevel</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+<Class name="Demo.FloodMonitor.WaterLevelResponse">
+<ClassType>persistent</ClassType>
+<ProcedureBlock>1</ProcedureBlock>
+<Super>Ens.Response</Super>
+<TimeCreated>65460,79532.954258</TimeCreated>
+
+<Property name="IsTooHigh">
+<Type>%Boolean</Type>
+</Property>
+
+<Storage name="Default">
+<Type>%Storage.Persistent</Type>
+<DefaultData>WaterLevelResponseDefaultData</DefaultData>
+<Data name="WaterLevelResponseDefaultData">
+<Subscript>"WaterLevelResponse"</Subscript>
+<Value name="1">
+<Value>IsTooHigh</Value>
+</Value>
+</Data>
+</Storage>
+</Class>
+
+
+</Export>
