@@ -76,6 +76,39 @@ IRISAPP>zn "%sys"
 do ##class(App.sys).SqlToDSN("SELECT * FROM xxmv.xx_t359_pzn","JDBC-DSN","^tmpMSWq"))
 ```
 
+Function to call from a regular tasks
+```
+do ##class(App.sys).RunTask("snmpwalk -v 1 server.ru -c public 1.3.6.1.4.1.16563.1.1.1.1.10","^%App.TaskLic","%SYSTEM.License:Counts","/tmp/snmp/")
+
+do ##class(App.sys).RunCmd("sudo du -sm /opt/isc/ensemble/mgr/*| sort -nr",$na(^%App.Cmd("mgr",$zd($h,3))),1,"/tmp/log/")
+```
+
+## To count in journal which globals as modifierade for a specific date
+```
+d ##class(App.files).OneDayJournalCount("e:\intersystems\ensemble\mgr\journal\"_$tr($zd($h,3),"-"),"^tmpJRN")
+%SYS>zw ^tmpJRN                                                                 
+^tmpJRN=""
+^tmpJRN("ENSEMBLE",20200321,21,"e:\intersystems\ensemble\mgr\","KILL","^%SYS(""JOURNAL"")","Counts")=1
+^tmpJRN("ENSEMBLE",20200321,21,"e:\intersystems\ensemble\mgr\","KILL","^%SYS(""JOURNAL"")","NewValue")=0
+^tmpJRN("ENSEMBLE",20200321,21,"e:\intersystems\ensemble\mgr\","KILL","^%SYS(""JOURNAL"")","OldValue")=0
+```
+Export to report CSV file 
+```
+d ##class(App.files).Export2CSV("g:/!/JrnCount*.csv","^tmpJRN")
+ 
+Written to the file g:/!/JrnCount20200322101754.csv
+```
+
+## Sending letters with file archives
+Let's prepare a global with settings
+```
+```
+Adding multiple files to an email
+```
+set files(1)="/tmp/sss"
+write ##class(App.net).SendFilesToEmail("subj send file", "send arhive file", .files, 1, "my_email@gmail.com")
+```
+
 ## Use Case Product Management
 Initialize interoperability and create a new test product ([thanks Dias](https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer)) in IRISAPP.
 ```
