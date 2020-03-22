@@ -1,4 +1,5 @@
-!(https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico) ## isc-apptools
+![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico) 
+## isc-apptools
 Application Tools for technical support and DBMS-Ensemble-Interoperability administrator. 
 
 View globals arrays, execute queries (including JDBC/ODBC), sending results to email as XLS files. Viewer class instances with СRUD editing. A few simple graphs on the protocols of the system.
