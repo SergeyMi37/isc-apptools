@@ -1,6 +1,6 @@
 ![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico)
 ## isc-apptools
-This solution allows saving the results of query execution (including JDBC / ODBC) to global arrays, sending results by e-mail in the form of archives of xls files, generating a report of modified globals by journal, group work with products from different namespaces, and increasing security settings.
+This solution allows saving the results of query execution (including JDBC / ODBC) to global arrays, generating a report of modified globals by journal, group work with products from different namespaces, and increasing security settings.
 
 ## Prerequisites
 Make sure you have [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Docker desktop](https://www.docker.com/products/docker-desktop) installed.
@@ -36,10 +36,23 @@ Let's create the apptools, apptoolsresr applications and write the mapping of pa
 ```
 IRISAPP>do ##class(App.Installer).CreateProjection()
 
+Installing AppTools application to IRISAPP
+Creating WEB application "/apptools"...
+WEB application "/apptools" is created.
+Creating WEB application "/apptoolsrest"...
+WEB application "/apptoolsrest" is created.
+%All namespace is created.
+Mapping AppTools package into all namespaces: %All
+AppTools package successfully mapped into all namespaces.
+
+http://055b0cf6722d:52773/apptools/App.LogInfo.cls
+http://055b0cf6722d:52773/apptools/App.TabsPanelUikitPermissMatrx.cls?autoload=Matrix
+
 ```
+
 ## Save queries to the global for future use in front-end applications
 ```
-IRISAPP>d ##class(App.sys).SaveQuery("%SYSTEM.License:Counts", "^test",123)
+IRISAPP>do ##class(App.sys).SaveQuery("%SYSTEM.License:Counts", "^test",123)
 
 IRISAPP>zw ^test
 ^test("%SYSTEM.License:Counts",123,0,1)="InstanceLicenseUse"
@@ -50,7 +63,7 @@ IRISAPP>zw ^test
 
 IRISAPP>zn "%sys"
  
-%SYS>d ##class(App.sys).SaveQuery("SYS.Database:FreeSpace")
+%SYS>do ##class(App.sys).SaveQuery("SYS.Database:FreeSpace")
  
 %SYS>zw ^%App.Task
 ^%App.Task("SYS.Database:FreeSpace","2020-03-22 09:36:49",0,1)="DatabaseName"
@@ -72,41 +85,52 @@ IRISAPP>zn "%sys"
 ^logMSW2(1)=$lb("%all","Роль Суперпользователя","%All")
 ^logMSW2(2)=$lb("%db_%default","Доступ на чтение/запись для ресурса","%DB_%DEFAULT")
 ...
-
-do ##class(App.sys).SqlToDSN("SELECT * FROM xxmv.xx_t359_pzn","JDBC-DSN","^tmpMSWq"))
+```
+If you determine JDBC-DSN, then you can connect to an external database
+```
+// do ##class(App.sys).SqlToDSN("SELECT * FROM xxmv.xx_t359_pzn","JDBC-DSN","^tmpMSWq"))
 ```
 
 Function to call from a regular tasks
 ```
-do ##class(App.sys).RunTask("snmpwalk -v 1 server.ru -c public 1.3.6.1.4.1.16563.1.1.1.1.10","^%App.TaskLic","%SYSTEM.License:Counts","/tmp/snmp/")
+%SYS>do ##class(App.sys).RunCmd("sudo du -sm /usr/irissys/mgr/*| sort -nr",$na(^%App.Cmd("mgr",$zd($h,3))),1,"/tmp/")
 
-do ##class(App.sys).RunCmd("sudo du -sm /opt/isc/ensemble/mgr/*| sort -nr",$na(^%App.Cmd("mgr",$zd($h,3))),1,"/tmp/log/")
+%SYS>zw ^%App.Cmd
+^%App.Cmd("mgr","2020-03-22","2020-03-22_17:27:03",1)="388"_$c(9)_"/usr/irissys/mgr/irislib"
+^%App.Cmd("mgr","2020-03-22","2020-03-22_17:27:03",2)="176"_$c(9)_"/usr/irissys/mgr/enslib"
+^%App.Cmd("mgr","2020-03-22","2020-03-22_17:27:03",3)="100"_$c(9)_"/usr/irissys/mgr/IRIS.WIJ"
+^%App.Cmd("mgr","2020-03-22","2020-03-22_17:27:03",4)="97"_$c(9)_"/usr/irissys/mgr/journal"
+^%App.Cmd("mgr","2020-03-22","2020-03-22_17:27:03",5)="90"_$c(9)_"/usr/irissys/mgr/IRIS.DAT"
+...
+
+// do ##class(App.sys).RunTask("snmpwalk -v 1 server.ru -c public 1.3.6.1.4.1.16563.1.1.1.1.10","^%App.TaskLic","%SYSTEM.License:Counts","/tmp/")
+
 ```
 
 ## To count in journal which globals as modifierade for a specific date
 ```
-d ##class(App.files).OneDayJournalCount("e:\intersystems\ensemble\mgr\journal\"_$tr($zd($h,3),"-"),"^tmpJRN")
-%SYS>zw ^tmpJRN                                                                 
+%SYS>do ##class(App.files).OneDayJournalCount("/usr/irissys/mgr/journal/"_$tr($zd($h,3),"-"),"^tmpJRN")
+
+/usr/irissys/mgr/journal/20200322.001
+Processed /usr/irissys/mgr/journal/20200322.001% 2 written in ^tmpJRN
+
+/usr/irissys/mgr/journal/20200322.002
+Processed /usr/irissys/mgr/journal/20200322.002% 2 written in ^tmpJRN
+
+/usr/irissys/mgr/journal/20200322.003
+
+%SYS>zw ^tmpJRN
 ^tmpJRN=""
-^tmpJRN("ENSEMBLE",20200321,21,"e:\intersystems\ensemble\mgr\","KILL","^%SYS(""JOURNAL"")","Counts")=1
-^tmpJRN("ENSEMBLE",20200321,21,"e:\intersystems\ensemble\mgr\","KILL","^%SYS(""JOURNAL"")","NewValue")=0
-^tmpJRN("ENSEMBLE",20200321,21,"e:\intersystems\ensemble\mgr\","KILL","^%SYS(""JOURNAL"")","OldValue")=0
+^tmpJRN("IRIS",20200322,16,"/opt/irisapp/data/","KILL","^ROUTINE","Counts")=1
+^tmpJRN("IRIS",20200322,16,"/opt/irisapp/data/","KILL","^ROUTINE","NewValue")=0
+^tmpJRN("IRIS",20200322,16,"/opt/irisapp/data/","KILL","^ROUTINE","OldValue")=0
+
 ```
 Export to report CSV file 
 ```
-d ##class(App.files).Export2CSV("g:/!/JrnCount*.csv","^tmpJRN")
- 
-Written to the file g:/!/JrnCount20200322101754.csv
-```
+%SYS>do ##class(App.files).Export2CSV("/tmp/JrnCount*.csv","^tmpJRN")
 
-## Sending letters with file archives
-Let's prepare a global with settings
-```
-```
-Adding multiple files to an email
-```
-set files(1)="/tmp/sss"
-write ##class(App.net).SendFilesToEmail("subj send file", "send arhive file", .files, 1, "my_email@gmail.com")
+Written to the file /tmp/JrnCount20200322173446.csv
 ```
 
 ## Use Case Product Management
