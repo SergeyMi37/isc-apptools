@@ -133,7 +133,7 @@ Export to report CSV file
 Written to the file /tmp/JrnCount20200322173446.csv
 ```
 
-## Use Case Product Management
+## Group work with products from different namespaces
 Initialize interoperability and create a new test product ([thanks Dias](https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer)) in IRISAPP.
 ```
 IRISAPP>do ##class(App.Production).CreateProduction("IRISAPP", "Test.TestProd", "Ens.MonitorService,Ens.Alerting.AlertManager,Ens.Activity.Operation.REST")
@@ -185,7 +185,7 @@ Create html format documentation in the form of tables for all products, includi
 IRISAPP>do ##class(App.Production).GenDoc("/usr/irissys/csp/user/gen-doc.xml")
 ```
 
-## Use Case Security Management
+## Increasing security settings
 You can replace the shared password if the password of the predefined system users has been compromised
 ```
 IRISAPP>do ##class(App.security).ChangePassword("NewPass231",##class(App.security).GetPreparedUsers())
