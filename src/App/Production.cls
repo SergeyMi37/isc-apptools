@@ -153,6 +153,7 @@ ClassMethod Init(nsList = "") As %Status
 /// out - result ;d ##class(App.Production).EnsAction("status",$zu(5),.out)
 ClassMethod EnsAction(ex = "", nsOnly = "", out) As %Status [ PublicList = (tProductionName, inf) ]
 {
+	;get all namespace with ensemble
 	s listns=##class(App.sys).ListNS(.inf,"NotPref,Ens")
 	$$$forAll(ns,inf)
 	i nsOnly'="",nsOnly'=ns continue
@@ -234,7 +235,7 @@ ClassMethod ExtInfo(pClassName, ou, write = 0) As %Status
 	s ou(Name)=Description
 	;s Items={}.$$$jsonFromJSON(json).Items
 	s items=[].$$$jsonFromJSON(json)."Items"
-	if item'="" {
+	if items'="" {
 		for i=0:1:items.$$$jsonSize()-1 {
 			set item = items.$$$jsonGet(i)
 			i $isobject(item) {
@@ -271,63 +272,95 @@ ClassMethod ExtInfo(pClassName, ou, write = 0) As %Status
 	q $$$OK
 }
 
-/// Automatic generate documenation
-/// d ##class(App.Production).GenDoc("/home/project/shared/gen-doc.xml")
-ClassMethod GenDoc(filename = "", namespacelist = "", title = "", subtitle = "", ByRef shortcode, ByRef shortulink, ByRef all) As %Status
+/// d ##class(App.Production).getModelTable("Mvk.model.",.result)
+ClassMethod getModelTable(like, all) As %Status
 {
+	;set sqlclass = "SELECT Name Класс, Description Описание FROM ""%Dictionary"".ClassDefinition WHERE Name LIKE 'Mvk.model.%'"
+	set sql = "SELECT cls.Name as ""Class Name"", cls.Description as ""Description"", prop.Name ""Property"",  prop.Type ""Type"",  prop.Description ""Description property"" FROM ""%Dictionary"".ClassDefinition cls  JOIN ""%Dictionary"".PropertyDefinition prop ON cls.Name = prop.parent WHERE cls.Name LIKE '"_like_"%'"
+	;w !,sql	
+	;Genaration table for HTML
+	set result="^||tmpPackgetModelTable"
+	set st=##class(App.sys).SaveSQL(sql,result)
+	 	d ..addstr(.all,$$$appTab3("Table name, Description table","Property, Type","Description type"))
+	s row="0",last=""
+	for { s row=$o(@result@(row)) q:row=""
+		s tab=$lg(@result@(row),1)_", "_$lg(@result@(row),2)
+		s tabpro=$lg(@result@(row),3)_", "_$lg(@result@(row),4)
+		d ..addstr(.all,$$$appTableTrTd3($s(last=tab:"",1:tab),tabpro,$lg(@result@(row),5)))
+		s last=tab
+	}
+	s %DrawArray=1
+	d ..addstr(.all,$$$appTableEnd3)
+	q $$$OK
+}
+
+/// add string to array
+ClassMethod addstr(ByRef all, s) As %Status
+{
+	s all($i(all))=s_$c(13,10)
+    q
+}
+
+/// Automatic generate documenation
+/// CategotyDoc = Category Elements
+/// filename - report html
+/// namespacelist - if empty then all
+/// title - Discriptions report
+/// d ##class(App.Production).GenDoc("/home/project/shared/gen-doc.xml")
+/// d ##class(App.Production).GenDoc("G:/!/gen-doc.xml")
+ClassMethod GenDoc(filename = "", namespacelist = "", title = "Productions ", CategotyItem = "", StatusProd = 1) As %Status
+{
+	#define appTableAttr "border=1"
+	new $namespace
+	d ##class(App.Production).SaveStat(1)
+	set:title="" subtitle="Productions documentation"
 	if '##class(App.files).OpenFile(filename) quit:$$$ERROR($$$GeneralError,"Error open file "_filename)
 	use filename		
 	&html<
 	<html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<title>#(title)#</title>
+		<title>Productions</title>
 	</head>
 	<body><a name='0'>
-		#(subtitle)#
+			<h1>#(title)#</h1>
 		>
-	if '$d(shortcode) {
-		s listns=##class(App.sys).ListNS(.inf,"NotPref,Ens")
-		d ##class(App.Production).EnsAction("info",listns,.out)
-		 s aNs=""
-			 for { s aNs=$o(proj(pr,pro,aNs)) q:aNs=""   continue:aNs="href"
-			 	s aNp="",lastprod=""
-			 	for { s aNp=$o(proj(pr,pro,aNs,aNp)) q:aNp=""	;Name Production
-			 		s aCp=""	
-			 		for { s aCp=$o(proj(pr,pro,aNs,aNp,aCp)) q:aCp=""	;Class Production
-			 			s aNb=""	
-			 			for { s aNb=$o(proj(pr,pro,aNs,aNp,aCp,aNb)) q:aNb=""	;Name Elements
-			 				s aClass=$lg(proj(pr,pro,aNs,aNp,aCp,aNb),1) ;Class Elements
-			 				s aCategory=$lg(proj(pr,pro,aNs,aNp,aCp,aNb),2) ;Category Elements
-						 	i aCategory'="",(" "_aCategory_" ")'[(" "_pr_" ") continue ;
+	s bk=$c(13,10)
+	;get information about active productions
+	do ##class(App.Production).EnsAction("info",namespacelist,.proj)
+	if $d(proj) {
+		 set aNs=""
+			 for { s aNs=$o(proj(aNs)) q:aNs=""
+			 	d ..addstr(.all,bk_"<H2>Namespace "_aNs_"</H2>"_bk)
+			 	d ..addstr(.all,$$$appTable3("Productions Name","Productions Item","Configuration"))
+			 	set aNp="",lastprod=""
+			 	for { s aNp=$o(proj(aNs,aNp)) q:aNp=""	;Name Production
+			 		set aCp=""	
+			 		for { s aCp=$o(proj(aNs,aNp,aCp)) q:aCp=""	;Class Production
+			 			set aNb=""	
+			 			for { s aNb=$o(proj(aNs,aNp,aCp,aNb)) q:aNb=""	;Name Elements
+			 				s aClass=$lg(proj(aNs,aNp,aCp,aNb),1) ;Class Elements
+			 				s aCategory=$lg(proj(aNs,aNp,aCp,aNb),2) ;Category Elements
+						 	i aCategory'="",(" "_aCategory_" ")'[(" "_CategotyItem_" ") continue ;
 			 				s aNbp="",listProp="<ul>"
-			 				for { s aNbp=$o(proj(pr,pro,aNs,aNp,aCp,aNb,aNbp)) q:aNbp=""	;Name Property
-			 					s listProp=listProp_"<li>"_aNbp_" :"_$g(proj(pr,pro,aNs,aNp,aCp,aNb,aNbp))
-			 					if $g(proj(pr,pro,aNs,aNp,aCp,aNb,aNbp,"ip"))'="" {
-				 					s listProp=listProp_"<ul><li>IP :<font color=red>"_$g(proj(pr,pro,aNs,aNp,aCp,aNb,aNbp,"ip"))_"</font></li></ul>"
+			 				for { s aNbp=$o(proj(aNs,aNp,aCp,aNb,aNbp)) q:aNbp=""	;Name Property
+			 					s listProp=listProp_"<li>"_aNbp_" :"_$g(proj(aNs,aNp,aCp,aNb,aNbp))
+			 					if $g(proj(aNs,aNp,aCp,aNb,aNbp,"ip"))'="" {
+				 					s listProp=listProp_"<ul><li>IP :<font color=red>"_$g(proj(aNs,aNp,aCp,aNb,aNbp,"ip"))_"</font></li></ul>"
 			 					}
 			 				}
 			 				s listProp=listProp_"</ul>"
-			 				d ..addstr(.all,$$$appTableTrTd3($s(lastprod=(aNp_", "_aCp):"",1:aNp_", "_aCp),aNb_", "_aClass_", "_aCategory,listProp))
-			 				s lastprod=aNp_", "_aCp
+			 				s valprod=$$NoRepit(aNp,aCp)
+			 				d ..addstr(.all,$$$appTableTrTd3($s(lastprod=(valprod):"",1:valprod),$$NoRepit(aNb,aClass)_", "_aCategory,listProp))
+			 				s lastprod=valprod
 			 			}
 			 			
 			 		}
 			 	}
+			 	d ..addstr(.all,$$$appTableEnd3)
 			 }
-		
-	}	
- 	s a=""
- 	for { s a=$o(shortcode(a)) q:a=""
- 		w "<li>"_a_" "_$g(shortcode(a))
- 	}
-	w "<hr>"
- 	s a=""
- 	for { s a=$o(shortulink(a)) q:a=""
- 		w "<li>"_$g(shortulink(a))
- 	}
+	}
 	w "<hr>"	
-	if '$d(all) 
  	s a=""
  	for { s a=$o(all(a)) q:a=""
  		w $g(all(a))
@@ -335,10 +368,11 @@ ClassMethod GenDoc(filename = "", namespacelist = "", title = "", subtitle = "",
  &html<
 	</body></html>
 	>
-	use io
 	close filename
 	write !,"Output documentation in "_filename
 	q $$$OK
+NoRepit(a,b)
+	q a_$s(a=b:"",1:", "_b)
 }
 
 }
