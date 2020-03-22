@@ -200,5 +200,5 @@ IRISAPP>do ##class(App.security).LockDown("NewPassword123",.msg,1,1,0,0)
 ```
 
 All other features of the interface part of the software solution can be found in the 
-![document](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/Documentation%20AppTools.pdf)
+[document](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/Documentation%20AppTools.pdf)
  or in an [article of a Russian resource](https://habr.com/en/post/436042/)
