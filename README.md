@@ -133,7 +133,7 @@ Export to report CSV file
 Written to the file /tmp/JrnCount20200322173446.csv
 ```
 
-## Group work with products from different namespaces
+## Group product management in various namespaces
 Initialize interoperability and create a new test product ([thanks Dias](https://openexchange.intersystems.com/package/IRIS-Interoperability-Message-Viewer)) in IRISAPP.
 ```
 IRISAPP>do ##class(App.Production).CreateProduction("IRISAPP", "Test.TestProd", "Ens.MonitorService,Ens.Alerting.AlertManager,Ens.Activity.Operation.REST")
@@ -182,7 +182,7 @@ def("Methods","ApplySettings","Description") = "Apply multiple settings to a"
 
 Create html format documentation in the form of tables for all products, including BS. BP BO and all classes that they meet
 ```
-IRISAPP>do ##class(App.Production).GenDoc("/usr/irissys/csp/user/gen-doc.xml")
+IRISAPP>do ##class(App.Production).GenDoc("/usr/irissys/csp/user/gen-doc.html")
 ```
 
 ## Increasing security settings
