@@ -1,6 +1,6 @@
 ![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico)
 ## isc-apptools
-This solution allows saving the results of query execution (including JDBC / ODBC) to global arrays, sending results by e-mail in the form of archives of xls files, group work with products from different areas, and increasing security settings.
+This solution allows saving the results of query execution (including JDBC / ODBC) to global arrays, sending results by e-mail in the form of archives of xls files, generating a report of modified globals by journal, group work with products from different namespaces, and increasing security settings.
 
 ## Prerequisites
 Make sure you have [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Docker desktop](https://www.docker.com/products/docker-desktop) installed.
@@ -173,7 +173,7 @@ You can get and study the description of the method parameters with such a comma
 IRISAPP>write ##class(App.msg).man("App.security).LockDown")
 
 Increase system security to LockDown
-The method disables services and applications as in LockDown. Deletes the areas "DOCBOOK", "ENSDEMO", "SAMPLES"
+The method disables services and applications as in LockDown. Deletes the namespaces "DOCBOOK", "ENSDEMO", "SAMPLES"
 The method enables auditing and configures registration of all events in the portal, except for switching the log
 and modification of system properties
 For all predefined users, change the password and change the properties as in LockDown
