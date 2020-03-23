@@ -1,5 +1,7 @@
 ![](https://github.com/SergeyMi37/isc-apptools/blob/master/doc/favicon.ico)
-## isc-apptools
+# isc-apptools
+[![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/isc-apptools)
+
 This solution allows saving the results of query execution (including JDBC / ODBC) to global arrays, generating a report of modified globals by journal, group work with products from different namespaces, and increasing security settings.
 
 ## Prerequisites
